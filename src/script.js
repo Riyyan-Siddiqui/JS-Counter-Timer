@@ -25,8 +25,6 @@ let seconds_container_tens = document.querySelectorAll(
 let seconds_container_unit = document.querySelectorAll(
   "#seconds-container div p"
 )[1];
-let tens = document.querySelectorAll(".sub-container div p")[0];
-let units = document.querySelectorAll(".sub-container div")[1];
 let resetBtn = $("reset");
 let startBtn = $("start");
 let unitsCount = new Array(4).fill(0);
@@ -39,6 +37,8 @@ let buttonsWithDownClass = Array.from(downBtns).map(
 );
 let allButtons = Array.from(allBtns).map((icon) => icon.parentElement);
 // console.log(now.getUTCMonth());
+let audio = new Audio("assets/wall-clock-ticks-quartz-clock-25480.mp3");
+let alarm = new Audio("assets/bedside-clock-alarm-95792.mp3");
 
 buttonsWithUpClass.forEach((upBtn, index) => {
   upBtn.addEventListener("click", (evt) => {
@@ -65,6 +65,8 @@ resetBtn.addEventListener("click", () => {
   allButtons.forEach((btn) => {
     btn.disabled = false;
   });
+  audio.pause();
+  alarm.pause();
 });
 
 startBtn.addEventListener("click", () => {
@@ -95,6 +97,8 @@ startBtn.addEventListener("click", () => {
   setTimeout(() => {
     clearInterval(intervalId);
     intervalId = null;
+    audio.pause();
+    alarm.play();
   }, 1000 * timeDuration);
 });
 
@@ -102,18 +106,15 @@ let startClock = () => {
   allBtns.forEach((btn) => {
     btn.disabled = true;
   });
-  if (
-    unitsCount[0] == 0 &&
-    tensCount[0] == 0 &&
-    unitsCount[1] == 0 &&
-    tensCount[1] == 0 &&
-    unitsCount[2] == 0 &&
-    tensCount[2] == 0 &&
-    unitsCount[3] == 0 &&
-    tensCount[3] == 0
-  ) {
-    return;
-  }
+
+  //Play audio
+  audio.onerror = function () {
+    console.error("Failed to load audio file.");
+  };
+  audio.play().catch((error) => {
+    console.error("Failed to play audio: ", error);
+  });
+  //link between day and hour
   if (
     tensCount[1].toString() + unitsCount[1].toString() == 0 &&
     tensCount[0].toString() + unitsCount[0].toString() > 0
@@ -128,6 +129,8 @@ let startClock = () => {
     unitsCount[1] = 10;
     hour_container_tens.innerText = --tensCount[1];
   }
+
+  //link between hour and minute
   if (
     tensCount[2].toString() + unitsCount[2].toString() == 0 &&
     tensCount[1].toString() + unitsCount[1].toString() > 0
@@ -143,6 +146,7 @@ let startClock = () => {
     minute_container_tens.innerText = --tensCount[2];
   }
 
+  //link between minute and second
   if (
     tensCount[3].toString() + unitsCount[3].toString() == 0 &&
     tensCount[2].toString() + unitsCount[2].toString() > 0
