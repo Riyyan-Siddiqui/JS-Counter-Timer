@@ -6,8 +6,9 @@ let $ = (id) => {
 
 //access dom elements
 
-let upBtns = document.querySelectorAll(".up");
-let downBtns = document.querySelectorAll(".down");
+let upBtns = document.querySelectorAll("button i.up");
+let downBtns = document.querySelectorAll("button i.down");
+let allBtns = document.querySelectorAll("button i.up, i.down");
 let day_container_tens = document.querySelectorAll("#day-container div p")[0];
 let day_container_unit = document.querySelectorAll("#day-container div p")[1];
 let hour_container_tens = document.querySelectorAll("#hour-container div p")[0];
@@ -28,34 +29,48 @@ let tens = document.querySelectorAll(".sub-container div p")[0];
 let units = document.querySelectorAll(".sub-container div")[1];
 let resetBtn = $("reset");
 let startBtn = $("start");
-let count = new Array(4).fill(0);
-let count1 = new Array(4).fill(0);
+let unitsCount = new Array(4).fill(0);
+let tensCount = new Array(4).fill(0);
 const now = new Date();
+let intervalId = null;
+let buttonsWithUpClass = Array.from(upBtns).map((icon) => icon.parentElement);
+let buttonsWithDownClass = Array.from(downBtns).map(
+  (icon) => icon.parentElement
+);
+let allButtons = Array.from(allBtns).map((icon) => icon.parentElement);
 // console.log(now.getUTCMonth());
 
-upBtns.forEach((upBtn, index) => {
+buttonsWithUpClass.forEach((upBtn, index) => {
   upBtn.addEventListener("click", (evt) => {
-    Increment(
-      upBtn.parentElement.parentElement.parentElement.getAttribute("id")
-    );
+    Increment(upBtn.parentElement.parentElement.getAttribute("id"));
   });
 });
 
-downBtns.forEach((downBtn, index) => {
+buttonsWithDownClass.forEach((downBtn, index) => {
   downBtn.addEventListener("click", (evt) => {
-    Decrement(
-      downBtn.parentElement.parentElement.parentElement.getAttribute("id")
-    );
+    Decrement(downBtn.parentElement.parentElement.getAttribute("id"));
   });
 });
 
 resetBtn.addEventListener("click", () => {
   Reset();
-  count.fill(0);
-  count1.fill(0);
+  unitsCount.fill(0);
+  tensCount.fill(0);
+
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+
+  allButtons.forEach((btn) => {
+    btn.disabled = false;
+  });
 });
 
 startBtn.addEventListener("click", () => {
+  allButtons.forEach((btn) => {
+    btn.disabled = true;
+  });
   let targetDaySet = Number(
     day_container_tens.innerText + day_container_unit.innerText
   );
@@ -75,62 +90,75 @@ startBtn.addEventListener("click", () => {
     targetSecondsSet;
 
   // 2 12 28 50 convert to seconds = (2*24*60*60) + (12*3600) + (28*60) +50
-  const intervalId = setInterval(startClock, 1000);
+  intervalId = setInterval(startClock, 1000);
 
   setTimeout(() => {
     clearInterval(intervalId);
+    intervalId = null;
   }, 1000 * timeDuration);
 });
 
 let startClock = () => {
+  allBtns.forEach((btn) => {
+    btn.disabled = true;
+  });
   if (
-    count[0] == 0 &&
-    count1[0] == 0 &&
-    count[1] == 0 &&
-    count1[1] == 0 &&
-    count[2] == 0 &&
-    count1[2] == 0 &&
-    count[3] == 0 &&
-    count1[3] == 0
+    unitsCount[0] == 0 &&
+    tensCount[0] == 0 &&
+    unitsCount[1] == 0 &&
+    tensCount[1] == 0 &&
+    unitsCount[2] == 0 &&
+    tensCount[2] == 0 &&
+    unitsCount[3] == 0 &&
+    tensCount[3] == 0
   ) {
     return;
   }
   if (
-    count1[2].toString() + count[2].toString() == 0 &&
-    count1[1].toString() + count[1].toString() > 0
+    tensCount[1].toString() + unitsCount[1].toString() == 0 &&
+    tensCount[0].toString() + unitsCount[0].toString() > 0
   ) {
-    count1[2] = 5;
-    count[2] = 9;
-    minute_container_unit.innerText = count[2];
-    minute_container_tens.innerText = count1[2];
-    hour_container_unit.innerText = --count[1];
+    tensCount[1] = 2;
+    unitsCount[1] = 4;
+    hour_container_unit.innerText = unitsCount[1];
+    hour_container_tens.innerText = tensCount[1];
+    day_container_unit.innerText = --unitsCount[0];
+  }
+  if (unitsCount[1] == 0 && tensCount[1] > 0) {
+    unitsCount[1] = 10;
+    hour_container_tens.innerText = --tensCount[1];
   }
   if (
-    count1[1].toString() + count[1].toString() == 0 &&
-    count1[0].toString() + count[0].toString() > 0
+    tensCount[2].toString() + unitsCount[2].toString() == 0 &&
+    tensCount[1].toString() + unitsCount[1].toString() > 0
   ) {
-    count1[1] = 2;
-    count[1] = 4;
-    hour_container_unit.innerText = count[1];
-    hour_container_tens.innerText = count1[1];
-    day_container_unit.innerText = --count[0];
+    tensCount[2] = 6;
+    unitsCount[2] = 0;
+    minute_container_unit.innerText = unitsCount[2];
+    minute_container_tens.innerText = tensCount[2];
+    hour_container_unit.innerText = --unitsCount[1];
+  }
+  if (unitsCount[2] == 0 && tensCount[2] > 0) {
+    unitsCount[2] = 10;
+    minute_container_tens.innerText = --tensCount[2];
   }
 
   if (
-    count1[3].toString() + count[3].toString() == 0 &&
-    count1[2].toString() + count[2].toString() > 0
+    tensCount[3].toString() + unitsCount[3].toString() == 0 &&
+    tensCount[2].toString() + unitsCount[2].toString() > 0
   ) {
-    count1[3] = 6;
-    count[3] = 0;
-    seconds_container_unit.innerText = count[3];
-    seconds_container_tens.innerText = count1[3];
-    minute_container_unit.innerText = --count[2];
+    tensCount[3] = 6;
+    unitsCount[3] = 0;
+    seconds_container_unit.innerText = unitsCount[3];
+    seconds_container_tens.innerText = tensCount[3];
+    minute_container_unit.innerText = --unitsCount[2];
   }
-  if (count[3] == 0 && count1[3] > 0) {
-    count[3] = 10;
-    seconds_container_tens.innerText = --count1[3];
+  if (unitsCount[3] == 0 && tensCount[3] > 0) {
+    unitsCount[3] = 10;
+    seconds_container_tens.innerText = --tensCount[3];
   }
-  seconds_container_unit.innerText = --count[3];
+
+  seconds_container_unit.innerText = --unitsCount[3];
 };
 
 let Reset = () => {
@@ -146,134 +174,106 @@ let Reset = () => {
 
 let Increment = (el) => {
   if (el === "day-container") {
-    day_container_unit.innerText = ++count[0];
-    if (count[0] === 10) {
-      count[0] = 0;
-      day_container_unit.innerText = count[0];
-      day_container_tens.innerText = ++count1[0];
+    day_container_unit.innerText = ++unitsCount[0];
+    if (unitsCount[0] === 10) {
+      unitsCount[0] = 0;
+      day_container_unit.innerText = unitsCount[0];
+      day_container_tens.innerText = ++tensCount[0];
     }
-    if (count1[0] == 9 && count[0] == 9) {
+    if (tensCount[0] == 9 && unitsCount[0] == 9) {
       console.log("modify");
-      count1[0] = 0;
-      count[0] = 0;
-      day_container_unit.innerText = count[0];
-      day_container_tens.innerText = count1[0];
+      tensCount[0] = 0;
+      unitsCount[0] = 0;
+      day_container_unit.innerText = unitsCount[0];
+      day_container_tens.innerText = tensCount[0];
     }
   } else if (el === "hour-container") {
-    hour_container_unit.innerText = ++count[1];
-    if (count[1] === 10) {
-      count[1] = 0;
-      hour_container_unit.innerText = count[1];
-      hour_container_tens.innerText = ++count1[1];
+    hour_container_unit.innerText = ++unitsCount[1];
+    if (unitsCount[1] === 10) {
+      unitsCount[1] = 0;
+      hour_container_unit.innerText = unitsCount[1];
+      hour_container_tens.innerText = ++tensCount[1];
     }
-    if (count1[1] == 2 && count[1] == 4) {
+    if (tensCount[1] == 2 && unitsCount[1] == 4) {
       console.log("modify");
-      count1[1] = 0;
-      count[1] = 0;
-      hour_container_unit.innerText = count[1];
-      hour_container_tens.innerText = count1[1];
+      tensCount[1] = 0;
+      unitsCount[1] = 0;
+      hour_container_unit.innerText = unitsCount[1];
+      hour_container_tens.innerText = tensCount[1];
     }
   } else if (el === "minute-container") {
-    minute_container_unit.innerText = ++count[2];
-    if (count[2] === 10) {
-      count[2] = 0;
-      minute_container_unit.innerText = count[2];
-      minute_container_tens.innerText = ++count1[2];
+    minute_container_unit.innerText = ++unitsCount[2];
+    if (unitsCount[2] === 10) {
+      unitsCount[2] = 0;
+      minute_container_unit.innerText = unitsCount[2];
+      minute_container_tens.innerText = ++tensCount[2];
     }
-    if (count1[2] == 6 && count[2] == 0) {
+    if (tensCount[2] == 6 && unitsCount[2] == 0) {
       console.log("modify");
-      count1[2] = 0;
-      count[2] = 0;
-      minute_container_unit.innerText = count[2];
-      minute_container_tens.innerText = count1[2];
+      tensCount[2] = 0;
+      unitsCount[2] = 0;
+      minute_container_unit.innerText = unitsCount[2];
+      minute_container_tens.innerText = tensCount[2];
     }
   } else {
-    seconds_container_unit.innerText = ++count[3];
-    if (count[3] === 10) {
-      count[3] = 0;
-      seconds_container_unit.innerText = count[3];
-      seconds_container_tens.innerText = ++count1[3];
+    seconds_container_unit.innerText = ++unitsCount[3];
+    if (unitsCount[3] === 10) {
+      unitsCount[3] = 0;
+      seconds_container_unit.innerText = unitsCount[3];
+      seconds_container_tens.innerText = ++tensCount[3];
     }
-    if (count1[3] == 6 && count[3] == 0) {
+    if (tensCount[3] == 6 && unitsCount[3] == 0) {
       console.log("modify");
-      count1[3] = 0;
-      count[3] = 0;
-      seconds_container_unit.innerText = count[3];
-      seconds_container_tens.innerText = count1[3];
+      tensCount[3] = 0;
+      unitsCount[3] = 0;
+      seconds_container_unit.innerText = unitsCount[3];
+      seconds_container_tens.innerText = tensCount[3];
     }
   }
 };
 
 let Decrement = (el) => {
   if (el === "day-container") {
-    if (count[0] === 0 && count1[0] === 0) {
+    if (unitsCount[0] === 0 && tensCount[0] === 0) {
       return;
-    } else if (count[0] === 0 && count1[0] > 0) {
-      count[0] = 10;
-      day_container_tens.innerText = --count1[0];
     }
-    day_container_unit.innerText = --count[0];
+    if (unitsCount[0] === 0 && tensCount[0] > 0) {
+      unitsCount[0] = 10;
+      day_container_tens.innerText = --tensCount[0];
+      return;
+    }
+    day_container_unit.innerText = --unitsCount[0];
   } else if (el === "hour-container") {
-    if (count[1] <= 0 && count1[1] <= 0 && count[0] <= 0) {
+    if (unitsCount[1] == 0 && tensCount[1] == 0) {
       return;
     }
-    if (count[1] === 0 && count1[1] > 0) {
-      count[1] = 10;
-      hour_container_tens.innerText = --count1[1];
-    }
-    if (count[1] === 0 && count1[1] === 0 && count[0] > 0) {
-      count1[1] = 2;
-      count[1] = 4;
-      hour_container_unit.innerText = count[1];
-      hour_container_tens.innerText = count1[1];
-      count[0]--;
-      day_container_unit.innerText = count[0];
-      return;
-    }
-    hour_container_unit.innerText = --count[0];
-  } else if (el === "minute-container") {
-    if (count[2] === 0 && count1[2] === 0 && count[1] === 0) {
-      return;
-    }
-    if (count[2] === 0 && count1[2] > 0) {
-      count[2] = 10;
-      minute_container_tens.innerText = --count1[2];
-    }
-    if (count[2] === 0 && count1[2] === 0 && count[1] > 0) {
-      count1[2] = 5;
-      count[2] = 9;
-      minute_container_unit.innerText = count[2];
-      minute_container_tens.innerText = count1[2];
-      count[1]--;
-      hour_container_unit.innerText = count[1];
+    if (unitsCount[1] === 0 && tensCount[1] > 0) {
+      unitsCount[1] = 10;
+      hour_container_tens.innerText = --tensCount[1];
       return;
     }
 
-    minute_container_unit.innerText = --count[2];
+    hour_container_unit.innerText = --unitsCount[1];
+  } else if (el === "minute-container") {
+    if (unitsCount[2] === 0 && tensCount[2] === 0) {
+      return;
+    }
+    if (unitsCount[2] === 0 && tensCount[2] > 0) {
+      unitsCount[2] = 10;
+      minute_container_tens.innerText = --tensCount[2];
+      return;
+    }
+
+    minute_container_unit.innerText = --unitsCount[2];
   } else {
-    if (
-      count[0] == 0 &&
-      count1[0] == 0 &&
-      count[1] == 0 &&
-      count[2] == 0 &&
-      count[3] == 0 &&
-      count1[3] == 0
-    ) {
+    if (unitsCount[3] == 0 && tensCount[3] == 0) {
       return;
     }
-    if (count[3] === 0 && count1[3] > 0) {
-      count[3] = 10;
-      seconds_container_tens.innerText = --count1[3];
-    }
-    if (count[3] === 0 && count1[3] === 0 && count[2] > 0) {
-      count1[3] = 5;
-      count[3] = 9;
-      seconds_container_unit.innerText = count[3];
-      seconds_container_tens.innerText = count1[3];
-      count[2]--;
-      minute_container_unit.innerText = count[2];
+    if (unitsCount[3] === 0 && tensCount[3] > 0) {
+      unitsCount[3] = 10;
+      seconds_container_tens.innerText = --tensCount[3];
       return;
     }
-    seconds_container_unit.innerText = --count[3];
+    seconds_container_unit.innerText = --unitsCount[3];
   }
 };
